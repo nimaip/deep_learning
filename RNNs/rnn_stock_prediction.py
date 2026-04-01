@@ -62,3 +62,23 @@ class StockRNN(nn.Module):
 model = StockRNN(input_size=1, hidden_size=32, num_layers=1, output_size=1)
 
 
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.005) # lr is the learning ratel
+num_epochs = 100
+
+print("Starting training...")
+for epoch in range(num_epochs):
+    model.train()
+    epoch_loss = 0.0
+    
+    for batch_X, batch_y in train_loader:
+        optimizer.zero_grad()
+        predictions = model(batch_X)
+        loss = criterion(predictions, batch_y)
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item()
+        
+    if (epoch + 1) % 10 == 0:
+        avg_loss = epoch_loss / len(train_loader)
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.6f}")
