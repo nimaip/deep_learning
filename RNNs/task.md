@@ -1,0 +1,5 @@
+### Task: Stock Price Prediction
+
+This project involves training a model to predict the future price of a stock based on its historical price data. Given a sequence of prices from the past $N$ days, the model learns to output the predicted price for day $N+1$. 
+
+Standard feedforward networks are poorly suited for this task because they treat every input as an independent event, ignoring the chronological order of the data. Stock markets, however, are fundamentally time-series streams where current trends rely heavily on past momentum. Vanilla Recurrent Neural Networks (RNNs) are an excellent fit for this because they utilize a **hidden state**. This hidden state acts as an internal memory that updates at each time step, allowing the network to retain context from the sequence of previous days. By sharing the same weights across all time steps, the RNN can efficiently learn temporal patterns and sequential dependencies to forecast the next value in the series.
