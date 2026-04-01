@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
+import matplotlib.pyplot as plt
 
 np.random.seed(42)
 time_steps = np.linspace(0, 100, 500)
@@ -82,3 +83,26 @@ for epoch in range(num_epochs):
     if (epoch + 1) % 10 == 0:
         avg_loss = epoch_loss / len(train_loader)
         print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.6f}")
+
+
+model.eval()
+predictions_list = []
+actuals_list = []
+
+print("Evaluating model...")
+with torch.no_grad():
+    for batch_X, batch_y in test_loader:
+        preds = model(batch_X)
+        predictions_list.extend(preds.squeeze().numpy())
+        actuals_list.extend(batch_y.squeeze().numpy())
+
+plt.figure(figsize=(12, 6))
+plt.plot(actuals_list, label="Actual Normalized Prices", color='blue', linewidth=2)
+plt.plot(predictions_list, label="RNN Predictions", color='red', linestyle='dashed', linewidth=2)
+
+plt.title("RNN Stock Prediction on Test Data")
+plt.xlabel("Time Steps (Days into the future)")
+plt.ylabel("Normalized Price")
+plt.legend()
+plt.grid(True)
+plt.show()
