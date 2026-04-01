@@ -96,6 +96,18 @@ with torch.no_grad():
         predictions_list.extend(preds.squeeze().numpy())
         actuals_list.extend(batch_y.squeeze().numpy())
 
+actuals = np.array(actuals_list)
+preds = np.array(predictions_list)
+
+mse = np.mean((actuals - preds)**2)
+rmse = np.sqrt(mse)
+mae = np.mean(np.abs(actuals - preds))
+
+print("\n--- Final Test Set Metrics ---")
+print(f"Mean Squared Error (MSE):       {mse:.6f}")
+print(f"Root Mean Squared Error (RMSE): {rmse:.6f}")
+print(f"Mean Absolute Error (MAE):      {mae:.6f}")
+
 plt.figure(figsize=(12, 6))
 plt.plot(actuals_list, label="Actual Normalized Prices", color='blue', linewidth=2)
 plt.plot(predictions_list, label="RNN Predictions", color='red', linestyle='dashed', linewidth=2)
