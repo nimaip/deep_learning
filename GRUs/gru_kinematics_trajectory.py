@@ -75,3 +75,32 @@ for epoch in range(epochs):
         print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}')
 
 print("Training Complete!")
+
+print("Evaluating Model...")
+model.eval()
+with torch.no_grad():
+    test_predictions = model(X_test)
+
+y_train_np = y_train.numpy()
+y_test_np = y_test.numpy()
+test_preds_np = test_predictions.numpy()
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+ax1.plot(train_losses, color='red', linewidth=2)
+ax1.set_title("Training Loss (MSE) over Epochs")
+ax1.set_xlabel("Epoch")
+ax1.set_ylabel("Loss")
+ax1.grid(True, alpha=0.3)
+
+ax1_line, = ax2.plot(y_train_np[:, 0], y_train_np[:, 1], label="Training Data (Seen)", color='gray', linestyle='--', alpha=0.5)
+ax2.plot(y_test_np[:, 0], y_test_np[:, 1], label="True Test Trajectory", color='blue', alpha=0.5, linewidth=4)
+ax2.plot(test_preds_np[:, 0], test_preds_np[:, 1], label="LSTM Predictions", color='orange', linewidth=2)
+
+ax2.set_title("Kinematic Tracking on Unseen Trajectory")
+ax2.set_xlabel("X Coordinate")
+ax2.set_ylabel("Y Coordinate")
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
