@@ -59,4 +59,19 @@ model = KinematicLSTM(input_size=2, hidden_size=64)
 criterion = nn.MSELoss() 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-print(model)
+epochs = 150
+train_losses = []
+print("Starting Training...")
+model.train()
+
+for epoch in range(epochs):
+    predictions = model(X_train)
+    loss = criterion(predictions, y_train)
+    train_losses.append(loss.item())
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    if (epoch + 1) % 20 == 0:
+        print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}')
+
+print("Training Complete!")
