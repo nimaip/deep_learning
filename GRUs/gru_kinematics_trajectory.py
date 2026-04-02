@@ -18,7 +18,7 @@ def generate_spiral_data(num_points=1000, noise_std=0.5):
     return torch.tensor(data, dtype=torch.float32)
 
 trajectory = generate_spiral_data()
-
+trajectory_deltas = trajectory[1:] - trajectory[:-1]
 
 def create_sequences(data, seq_length):
     xs = []
@@ -34,7 +34,7 @@ def create_sequences(data, seq_length):
     return torch.stack(xs), torch.stack(ys)
 
 SEQ_LENGTH = 20
-X, y = create_sequences(trajectory, SEQ_LENGTH)
+X, y = create_sequences(trajectory_deltas, SEQ_LENGTH)
 
 train_size = int(len(X) * 0.8)
 
@@ -49,7 +49,7 @@ class KinematicLSTM(nn.Module):
         self.fc = nn.Linear(hidden_size, 2)
         
     def forward(self, x):
-        lstm_out, (hidden_state, cell_state) = self.lstm(x)
+        lstm_out, _ = self.lstm(x)
         final_time_step_out = lstm_out[:, -1, :]
         prediction = self.fc(final_time_step_out)
         
@@ -68,11 +68,13 @@ for epoch in range(epochs):
     predictions = model(X_train)
     loss = criterion(predictions, y_train)
     train_losses.append(loss.item())
+    
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+    
     if (epoch + 1) % 20 == 0:
-        print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}')
+        print(f'Epoch [{epoch+1}/{epochs}], Training Loss: {loss.item():.4f}')
 
 print("Training Complete!")
 
@@ -80,23 +82,28 @@ print("Evaluating Model...")
 model.eval()
 with torch.no_grad():
     test_predictions = model(X_test)
+    test_loss = criterion(test_predictions, y_test)
+    print(f"Test MSE Loss: {test_loss.item():.4f}")
 
-y_train_np = y_train.numpy()
-y_test_np = y_test.numpy()
-test_preds_np = test_predictions.numpy()
+test_base_positions = trajectory[train_size + SEQ_LENGTH : -1].numpy()
+test_preds_absolute_np = test_base_positions + test_predictions.numpy()
+y_test_absolute_np = trajectory[train_size + SEQ_LENGTH + 1 : ].numpy()
+
+y_train_absolute_np = trajectory[SEQ_LENGTH + 1 : train_size + SEQ_LENGTH + 1].numpy()
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
 ax1.plot(train_losses, color='red', linewidth=2)
 ax1.set_title("Training Loss (MSE) over Epochs")
 ax1.set_xlabel("Epoch")
 ax1.set_ylabel("Loss")
 ax1.grid(True, alpha=0.3)
 
-ax1_line, = ax2.plot(y_train_np[:, 0], y_train_np[:, 1], label="Training Data (Seen)", color='gray', linestyle='--', alpha=0.5)
-ax2.plot(y_test_np[:, 0], y_test_np[:, 1], label="True Test Trajectory", color='blue', alpha=0.5, linewidth=4)
-ax2.plot(test_preds_np[:, 0], test_preds_np[:, 1], label="LSTM Predictions", color='orange', linewidth=2)
+ax2.plot(y_train_absolute_np[:, 0], y_train_absolute_np[:, 1], label="Training Data (Seen)", color='gray', linestyle='--', alpha=0.5)
+ax2.plot(y_test_absolute_np[:, 0], y_test_absolute_np[:, 1], label="True Test Trajectory", color='blue', alpha=0.5, linewidth=4)
+ax2.plot(test_preds_absolute_np[:, 0], test_preds_absolute_np[:, 1], label="LSTM Predictions", color='orange', linewidth=2)
 
-ax2.set_title("Kinematic Tracking on Unseen Trajectory")
+ax2.set_title("Kinematic Tracking on Unseen Trajectory (Delta Model)")
 ax2.set_xlabel("X Coordinate")
 ax2.set_ylabel("Y Coordinate")
 ax2.legend()
