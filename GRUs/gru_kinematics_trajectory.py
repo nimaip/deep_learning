@@ -19,6 +19,7 @@ def generate_spiral_data(num_points=1000, noise_std=0.5):
 
 trajectory = generate_spiral_data()
 
+
 def create_sequences(data, seq_length):
     xs = []
     ys = []
@@ -40,5 +41,22 @@ train_size = int(len(X) * 0.8)
 X_train, X_test = X[:train_size], X[train_size:]
 y_train, y_test = y[:train_size], y[train_size:]
 
-print(f"X_train shape: {X_train.shape} -> [batch_size, seq_length, features]")
-print(f"y_train shape: {y_train.shape} -> [batch_size, features]")
+class KinematicLSTM(nn.Module):
+    def __init__(self, input_size=2, hidden_size=64, num_layers=1):
+        super(KinematicLSTM, self).__init__()
+        self.hidden_size = hidden_size
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, 2)
+        
+    def forward(self, x):
+        lstm_out, (hidden_state, cell_state) = self.lstm(x)
+        final_time_step_out = lstm_out[:, -1, :]
+        prediction = self.fc(final_time_step_out)
+        
+        return prediction
+
+model = KinematicLSTM(input_size=2, hidden_size=64)
+criterion = nn.MSELoss() 
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
+print(model)
