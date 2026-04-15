@@ -96,3 +96,32 @@ for epoch in range(500):
         print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
 
 print("Training Complete!")
+
+
+
+def reverse_sequence(model, input_seq, vocab_size, max_len):
+    model.eval()
+    with torch.no_grad():
+        src = input_seq.unsqueeze(0) 
+        
+        tgt_input = torch.tensor([[1]], dtype=torch.long)
+        
+        for _ in range(max_len):
+            tgt_mask = generate_square_subsequent_mask(tgt_input.size(1))
+            output = model(src, tgt_input, tgt_mask=tgt_mask)
+            next_token = output[0, -1, :].argmax().item()
+            
+            next_token_tensor = torch.tensor([[next_token]], dtype=torch.long)
+            tgt_input = torch.cat((tgt_input, next_token_tensor), dim=1)
+            
+            if tgt_input.size(1) > max_len:
+                break
+                
+        return tgt_input[0, 1:] 
+test_input = torch.randint(2, vocab_size, (seq_len,))
+result = reverse_sequence(model, test_input, vocab_size, seq_len)
+
+print("\n--- Final Test ---")
+print(f"Original: {test_input.tolist()}")
+print(f"Expected: {test_input.flip(0).tolist()}")
+print(f"Predicted: {result.tolist()}")
