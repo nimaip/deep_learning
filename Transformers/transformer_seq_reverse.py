@@ -64,7 +64,7 @@ def generate_square_subsequent_mask(sz):
     return mask
 
 
-vocab_size = 20 
+vocab_size = 16
 d_model = 64
 nhead = 4
 num_layers = 2
@@ -77,7 +77,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 print("Starting training...")
-for epoch in range(500):
+for epoch in range(2000):
     model.train()
     optimizer.zero_grad()
     
