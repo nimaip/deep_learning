@@ -52,3 +52,47 @@ class TransformerModel(nn.Module):
         tgt = self.pos_encoder(self.embedding(tgt) * math.sqrt(self.d_model))
         output = self.transformer(src, tgt, tgt_mask=tgt_mask)
         return self.out(output)
+    
+
+def generate_square_subsequent_mask(sz):
+    """
+    Generates an upper-triangular matrix of -inf, with zeros on diag.
+    sz: The length of the sequence
+    """
+    mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
+    mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+    return mask
+
+
+vocab_size = 20 
+d_model = 64
+nhead = 4
+num_layers = 2
+dim_feedforward = 128
+batch_size = 16
+seq_len = 8
+
+model = TransformerModel(vocab_size, d_model, nhead, num_layers, dim_feedforward)
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+print("Starting training...")
+for epoch in range(500):
+    model.train()
+    optimizer.zero_grad()
+    
+    src, y = get_batch(batch_size, seq_len, vocab_size)
+    
+    sos = torch.ones((batch_size, 1), dtype=torch.long)
+    tgt_input = torch.cat((sos, y[:, :-1]), dim=1)
+    tgt_mask = generate_square_subsequent_mask(seq_len)
+    output = model(src, tgt_input, tgt_mask=tgt_mask)
+    loss = criterion(output.view(-1, vocab_size), y.view(-1))
+    
+    loss.backward()
+    optimizer.step()
+    
+    if epoch % 100 == 0:
+        print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
+
+print("Training Complete!")
