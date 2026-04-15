@@ -1,0 +1,5 @@
+### Task: Synthetic Sequence Reversal
+
+This project involves training a model to reverse a randomly generated sequence of integers. Given an input sequence like [4, 12, 7, 19], the model learns to output the exact reverse order: [19, 7, 12, 4].
+
+Standard feedforward networks are poorly suited for this task because they treat every input as an independent event, ignoring the order and structure of the data. Recurrent Neural Networks (RNNs), while designed for sequences, process data step-by-step and must compress the entire input into a single hidden state, which often loses information over long sequences. Transformers, however, are an excellent fit for this because they utilize self-attention. This mechanism discards recurrence entirely, allowing the model to process the entire sequence simultaneously. By evaluating the relationships between all tokens at once, the Transformer can directly map the first position of the output to the last position of the input in a single computational step, efficiently learning global dependencies and sequence routing.
